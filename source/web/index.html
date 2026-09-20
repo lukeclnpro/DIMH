@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HomeDrive — Cloud privé</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="toast"></div>
+  <div id="authView" class="auth-shell">
+    <div class="auth-card">
+      <div class="brand"><span class="brand-mark">H</span><span>HomeDrive</span></div>
+      <p class="muted">Votre Drive privé, hébergé sur votre serveur.</p>
+      <div class="auth-tabs">
+        <button class="tab active" data-auth="login">Connexion</button>
+        <button class="tab" data-auth="register">Créer un compte</button>
+        <button class="tab" data-auth="public">Compte public</button>
+      </div>
+      <form id="authForm">
+        <label>Identifiant<input id="username" minlength="3" autocomplete="username" required></label>
+        <label>Mot de passe<input id="password" type="password" minlength="6" autocomplete="current-password" required></label>
+        <button class="primary wide" type="submit" id="authSubmit">Se connecter</button>
+      </form>
+      <button id="publicEnter" class="ghost wide hidden">Se connecter au compte public</button>
+      <p class="hint">Le compte public est un vrai compte sans mot de passe, en lecture seule.</p>
+    </div>
+  </div>
+
+  <div id="appView" class="hidden">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">H</span><span>HomeDrive</span></div>
+      <div id="userBadge" class="user-badge"></div>
+      <nav aria-label="Navigation principale">
+        <button class="nav-item active" data-section="drive" aria-label="Mon Drive" title="Mon Drive"><span class="nav-symbol" aria-hidden="true">▣</span><span>Mon Drive</span></button>
+        <button class="nav-item" data-section="shared" aria-label="Partages" title="Partages"><span class="nav-symbol" aria-hidden="true">↗</span><span>Partages</span></button>
+        <button class="nav-item" data-section="performance" aria-label="Performances serveur" title="Performances serveur"><span class="nav-symbol" aria-hidden="true">◌</span><span>Performances serveur</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button id="logoutBtn" class="nav-item" aria-label="Déconnexion" title="Déconnexion"><span class="nav-symbol" aria-hidden="true">⇥</span><span>Déconnexion</span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">Mon Drive</h1>
+          <div id="breadcrumb" class="breadcrumb"></div>
+        </div>
+        <div class="top-actions">
+          <input id="searchInput" class="search" aria-label="Rechercher dans le Drive" placeholder="Rechercher dans le Drive…">
+          <button id="refreshBtn" class="icon-btn" title="Actualiser" aria-label="Actualiser">↻</button>
+          <button id="publicExitBtn" class="secondary hidden" title="Sortir du mode public">Quitter le mode public</button>
+        </div>
+      </header>
+
+      <section id="driveSection" class="section">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <button id="backBtn" class="secondary nav-folder-btn" title="Dossier précédent">←</button>
+            <button id="rootBtn" class="secondary nav-folder-btn" title="Dossier racine">⌂</button>
+            <button id="uploadBtn" class="primary">↑ Importer</button>
+            <button id="newFolderBtn" class="secondary">＋ Dossier</button>
+            <button id="newFileBtn" class="secondary">＋ Fichier texte</button>
+            <button id="selectAllBtn" class="secondary hidden">☑ Tout sélectionner</button>
+            <button id="pasteBtn" class="secondary hidden">📋 Coller</button>
+            <input id="fileInput" type="file" multiple hidden>
+          </div>
+          <div id="readOnlyNotice" class="notice hidden">Mode public : lecture seule</div>
+        </div>
+        <div id="selectionBar" class="selection-bar hidden">
+          <span id="selectionCount" class="count"></span>
+          <button id="selectionDownloadBtn" class="secondary" type="button">⬇ Télécharger</button>
+          <button id="selectionCopyBtn" class="secondary" type="button">⧉ Copier</button>
+          <button id="selectionCutBtn" class="secondary" type="button">✂ Couper</button>
+          <button id="selectionRenameBtn" class="secondary hidden" type="button">✎ Renommer</button>
+          <button id="selectionDeleteBtn" class="secondary" type="button">🗑 Supprimer</button>
+          <button id="selectionClearBtn" class="ghost" type="button">Désélectionner</button>
+        </div>
+        <div id="searchResults" class="search-results hidden"></div>
+        <div id="fileGrid" class="file-grid"></div>
+        <div id="emptyState" class="empty hidden"><div class="empty-icon">⌂</div><h3>Dossier vide</h3><p>Importez un fichier ou créez un dossier.</p></div>
+      </section>
+
+      <section id="sharedSection" class="section hidden">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Partages</h2>
+              <p class="muted">Recevez et envoyez des fichiers aux utilisateurs de HomeDrive.</p>
+            </div>
+            <button id="sendFileBtn" class="primary">↑ Envoyer des fichier</button>
+          </div>
+          <div id="sharedList" class="file-list"></div>
+        </div>
+      </section>
+
+      <dialog id="sendFileDialog" class="file-picker-dialog">
+        <div class="dialog-head">
+          <div>
+            <h2>Choisir un fichier</h2>
+            <p class="muted">Parcourez votre Drive puis sélectionnez le fichier à envoyer.</p>
+          </div>
+          <button id="closeSendFile" class="icon-btn" type="button">×</button>
+        </div>
+        <div class="picker-breadcrumb" id="pickerBreadcrumb">Racine</div>
+        <div class="picker-toolbar">
+          <button id="pickerBack" class="secondary" type="button">← Retour</button>
+          <button id="pickerRoot" class="secondary" type="button">⌂ Racine</button>
+        </div>
+        <div id="pickerGrid" class="file-grid picker-grid"></div>
+        <div class="send-target">
+          <label>Envoyer à
+            <select id="sendUsername" required>
+              <option value="">Chargement des comptes…</option>
+            </select>
+          </label>
+          <label>Permission
+            <select id="sendPermission">
+              <option value="read">Lecture</option>
+              <option value="write">Lecture et écriture</option>
+            </select>
+          </label>
+        </div>
+        <div class="dialog-actions">
+          <span id="selectedFileLabel" class="muted">Aucun fichier sélectionné</span>
+          <button id="confirmSendFile" class="primary" type="button" disabled>Envoyer le fichier</button>
+        </div>
+      </dialog>
+
+      <section id="performanceSection" class="section hidden">
+        <div class="perf-head">
+          <div><h2>Performances du PC serveur</h2><p class="muted">Mesures effectuées directement sur la machine qui héberge HomeDrive.</p></div>
+          <div class="perf-actions"><button id="runBenchmark" class="primary">Tester les performances</button></div>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><span>CPU</span><strong id="cpuStat">—</strong><div class="bar"><i id="cpuBar"></i></div><small id="cpuMeta">—</small></article>
+          <article class="stat-card"><span>RAM</span><strong id="ramStat">—</strong><div class="bar"><i id="ramBar"></i></div><small id="ramMeta">—</small></article>
+          <article class="stat-card"><span>SSD / disque</span><strong id="diskStat">—</strong><div class="bar"><i id="diskBar"></i></div><small id="diskMeta">—</small></article>
+          <article class="stat-card"><span>Écriture disque</span><strong id="writeStat">—</strong><div class="bar"><i id="writeBar"></i></div><small id="writeMeta">Test à la demande</small></article>
+          <article class="stat-card"><span>Connexion LAN</span><strong id="netStat">—</strong><div class="bar"><i id="netBar"></i></div><small id="netMeta">Test navigateur ↔ serveur</small></article>
+          <article class="stat-card"><span>Uptime</span><strong id="uptimeStat">—</strong><small id="hostMeta">—</small></article>
+        </div>
+        <div class="panel perf-note"><div class="perf-note-head"><div><b>À propos des mesures</b><p>La vitesse d’écriture mesure un fichier temporaire sur le disque du serveur. La vitesse réseau mesure le transfert entre votre navigateur et le serveur HomeDrive : elle dépend donc du Wi‑Fi/Ethernet et du réseau utilisé.</p></div></div></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="uploadPanel" class="upload-panel hidden">
+    <div class="upload-panel-head">
+      <span id="uploadPanelTitle">Import…</span>
+      <div class="upload-panel-actions">
+        <button id="uploadPanelToggle" type="button" title="Réduire / agrandir">–</button>
+        <button id="uploadPanelClose" type="button" title="Fermer">×</button>
+      </div>
+    </div>
+    <div id="uploadPanelSummary" class="upload-panel-summary"></div>
+    <div id="uploadPanelList" class="upload-panel-list"></div>
+  </div>
+
+  <div id="contextMenu" class="context-menu"></div>
+
+  <dialog id="conflictDialog">
+    <div class="dialog">
+      <h3>Le fichier existe déjà</h3>
+      <p id="conflictMessage" class="muted"></p>
+      <label class="checkbox-line"><input type="checkbox" id="conflictApplyAll"> Appliquer à tous les fichiers en conflit</label>
+      <div class="dialog-actions">
+        <button id="conflictCancel" class="secondary" type="button">Ignorer</button>
+        <button id="conflictKeepBoth" class="secondary" type="button">Garder les deux</button>
+        <button id="conflictReplace" class="primary" type="button">Remplacer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog id="textDialog">
+    <form method="dialog" class="dialog">
+      <h3 id="dialogTitle">Nouveau fichier</h3>
+      <input id="textName" placeholder="nom.txt" required>
+      <textarea id="textContent" placeholder="Contenu…"></textarea>
+      <div class="dialog-actions"><button class="secondary" value="cancel">Annuler</button><button id="saveText" class="primary" value="default">Créer</button></div>
+    </form>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>

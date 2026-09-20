@@ -1,0 +1,6 @@
+chmod +x scripts/*.sh
+  ./scripts/install.sh
+  ./.venv/bin/python launch.py
+
+
+
