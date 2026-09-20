@@ -1,7 +1,3 @@
-Voici le contenu directement en **Markdown (`README.md`)** :
-
- README.md
-
 # DIMH
 
  **DIMH** est un drive utilisable sous Linux qui permet d'exposer un PC comme un espace de stockage accessible depuis les autres appareils connectés au même réseau local.
